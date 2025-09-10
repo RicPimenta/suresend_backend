@@ -17,7 +17,7 @@ app.use(middlewareLogger);
 
 app.use('/auth', authRouter);
 app.get("/", (req, res) => {
-  res.send("Hello, Feeding Bird!");
+  res.send("Hello, Sure Send");
 });
 
 const port = 3000;
