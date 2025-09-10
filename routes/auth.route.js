@@ -5,10 +5,7 @@ const authMiddleware = require("../middleware/auth");
 
 router.post("/create", Auth.createUser);
 router.post("/login", Auth.loginUser);
-// router.get("/profile", authMiddleware, Auth.getProfile);
-// router.post("/logout", authMiddleware, Auth.logoutUser);
-
-// router.post("/forgot-password", Auth.forgotPassword);
-// router.post("/reset-password", Auth.resetPassword);
+router.post("/sendOtpEmail", Auth.sendOtp);
+router.post("/loginOtpVerifyEmail", Auth.OtpVerify);
 
 module.exports = router;

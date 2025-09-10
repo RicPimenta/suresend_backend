@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const middlewareLogger = require('logger_middleware_v2');
 const pool = require('./config/db');
+const mongoose = require('./config/mongodb');
 const bodyParser = require('body-parser');
 const authRouter = require('./routes/auth.route');
 
