@@ -2,7 +2,7 @@ const sgMail = require("@sendgrid/mail");
 const OtpModel = require("../models/otp.model");
 
 sgMail.setApiKey(
-  ``
+  `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`
 );
 
 exports.sendOtp = async (email) => {
@@ -13,8 +13,8 @@ exports.sendOtp = async (email) => {
 
     const msg = {
       to: email,
-      from: "info@feedingbird.com", // make sure this is verified in SendGrid
-      templateId: "d-4add55fe59e14922ba00e5e60a4fc623", // must be dynamic + published
+      from: "notifications@suresend.africa", // make sure this is verified in SendGrid
+      templateId: "d-1c71b0144197473795999bc85e629dd6", // must be dynamic + published
       dynamic_template_data: {
         code: otp, // must match {{code}} in the template
       },
