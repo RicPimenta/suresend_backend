@@ -2,7 +2,7 @@ const sgMail = require("@sendgrid/mail");
 const OtpModel = require("../models/otp.model");
 
 sgMail.setApiKey(
-  `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`
+  `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`
 );
 
 exports.sendOtp = async (email) => {
