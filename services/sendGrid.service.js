@@ -48,8 +48,6 @@ exports.verifyOtp = async (email, otp) => {
       .sort({ createdAt: -1 }) // Sort by createdAt in descending order
       .exec();
 
-    console.log("latestUser ////////////");
-    console.log(latestUser);
     if (!latestUser) {
       return { success: false, message: "No OTP found for this email" };
     }

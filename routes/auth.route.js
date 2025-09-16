@@ -5,7 +5,14 @@ const authMiddleware = require("../middleware/auth");
 
 router.post("/create", Auth.createUser);
 router.post("/login", Auth.loginUser);
-router.post("/sendOtpEmail", Auth.sendOtp);
-router.post("/loginOtpVerifyEmail", Auth.OtpVerify);
+
+router.post("/sendVeficationOTP", Auth.sendOtp);
+router.post("/VerifyOTPVerification", Auth.verifyOtp);
+
+router.post("/sendOtpEmail", Auth.sendOtpEmail);
+router.post("/loginOtpVerifyEmail", Auth.OtpVerifyEmail);
+
+router.post("/sendOtpMobile", Auth.sendOtpMobile);
+router.post("/loginOtpVerifyMobile", Auth.loginPhoneVerify);
 
 module.exports = router;

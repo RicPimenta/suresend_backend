@@ -16,6 +16,7 @@
     "jsonwebtoken": "^9.0.2",
     "logger_middleware_v2": "^1.0.0",
     "mongoose": "^8.18.1",
-    "pg": "^8.16.3"
+    "pg": "^8.16.3",
+    "twilio": "^5.9.0"
   }
 }

@@ -2,6 +2,7 @@ const authModel = require("../models/auth.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const OTPEMailService = require("../services/sendGrid.service");
+const OTPMobileService = require("../services/otp.service");
 
 exports.createUser = async (req, res) => {
   try {
@@ -115,7 +116,7 @@ exports.loginUser = async (req, res) => {
   }
 };
 
-exports.sendOtp = async (req, res) => {
+exports.sendOtpEmail = async (req, res) => {
   try {
     let email = req.body.email;
     const otpResponse = await OTPEMailService.sendOtp(email);
@@ -135,7 +136,25 @@ exports.sendOtp = async (req, res) => {
   }
 };
 
-exports.OtpVerify = async (req, res) => {
+exports.sendOtpMobile = async (req, res) => {
+  try {
+    let cell = req.body.cell;
+    const otpResponse = await OTPMobileService.sendOtp(cell);
+
+    res.status(200).json({
+      success: true,
+      data: otpResponse.message,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+exports.OtpVerifyEmail = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
@@ -178,5 +197,116 @@ exports.OtpVerify = async (req, res) => {
       success: false,
       error: error.message,
     });
+  }
+};
+
+exports.loginPhoneVerify = async (req, res) => {
+  try {
+    let { PhoneNumber, otp } = req.body;
+
+    const otpResponse = await OTPMobileService.verifyOtp(PhoneNumber, otp);
+
+    if (!otpResponse.success) {
+      return res.status(400).json({
+        success: false,
+        data: "Invalid OTP",
+      });
+    }
+
+    // 2. Fetch the user (so you can issue JWT with userId/email just like normal login)
+    const user = await authModel.checkExisitingUser(PhoneNumber);
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        data: "User does not exist",
+      });
+    }
+
+    // 3. Issue JWT (same as your password login)
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" } // optional
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "OTP Verified",
+      data: user,
+      token: token,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+exports.sendOtp = async (req, res) => {
+  try {
+    const { identifier } = req.body;
+    if (!identifier) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Identifier required" });
+    }
+
+    // Detect type
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    const isPhone = /^\+[1-9]\d{7,14}$/.test(identifier);
+
+    if (!isEmail && !isPhone) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid email or phone number" });
+    }
+
+    // Send OTP
+    if (isEmail) {
+      await OTPEMailService.sendOtp(identifier);
+    } else {
+      await OTPMobileService.sendOtp(identifier);
+    }
+
+    res.status(200).json({ success: true, message: "OTP sent successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { identifier, otp } = req.body;
+
+    if (!identifier || !otp) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Identifier and OTP required" });
+    }
+
+    // Detect type
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    const isPhone = /^[0-9]{7,15}$/.test(identifier);
+
+    if (!isEmail && !isPhone) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid email or phone number" });
+    }
+
+    // Verify OTP
+    if (isEmail) {
+      const otpResponse = await OTPEMailService.verifyOtp(identifier, otp);
+      return res.status(200).json({ success: true, data: otpResponse });
+    } else {
+      const otpResponse = await OTPMobileService.verifyOtp(identifier, otp);
+      return res.status(200).json({ success: true, data: otpResponse });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: error.message });
   }
 };
