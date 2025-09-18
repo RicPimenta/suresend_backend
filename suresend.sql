@@ -15,3 +15,21 @@ CREATE TABLE Person (
     password VARCHAR(255) NOT NULL
 );
  --  Full name , DOB , Country of resident , email , secrete pin
+
+ CREATE TABLE referral_codes (
+    id SERIAL PRIMARY KEY,
+    person_id INT NOT NULL,
+    code VARCHAR(20) UNIQUE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (person_id) REFERENCES Person(person_id)
+);
+
+CREATE TABLE referral_uses (
+    id SERIAL PRIMARY KEY,
+    referrer_id INT NOT NULL,
+    referred_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (referrer_id) REFERENCES Person(person_id),
+    FOREIGN KEY (referred_id) REFERENCES Person(person_id),
+    UNIQUE (referred_id) -- a person can only redeem once
+);

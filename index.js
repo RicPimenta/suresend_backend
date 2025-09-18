@@ -5,6 +5,7 @@ const pool = require('./config/db');
 const mongoose = require('./config/mongodb');
 const bodyParser = require('body-parser');
 const authRouter = require('./routes/auth.route');
+const referralRouter = require('./routes/referalCode.route');
 
 
 app.use(express.json()); // Parses JSON payloads
@@ -16,6 +17,8 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(middlewareLogger);
 
 app.use('/auth', authRouter);
+app.use('/referral', referralRouter);
+
 app.get("/", (req, res) => {
   res.send("Hello, Sure Send");
 });
