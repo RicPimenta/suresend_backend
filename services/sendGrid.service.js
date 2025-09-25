@@ -2,10 +2,7 @@ const sgMail = require("@sendgrid/mail");
 const OtpModel = require("../models/otp.model");
 const sendgrid = process.env.SENDGRID;
 
-
-sgMail.setApiKey(
-  `${sendgrid}`
-);
+sgMail.setApiKey(`${sendgrid}`);
 
 exports.sendOtp = async (email) => {
   try {
@@ -35,6 +32,23 @@ exports.sendOtp = async (email) => {
   } catch (e) {
     console.error("Error sending OTP", e.response?.body || e.message);
     throw new Error("Error sending OTP");
+  }
+};
+
+exports.sendEmail = async (message) => {
+  try {
+    const msg = {
+      to: "notifications@suresend.africa",
+      from: "notifications@suresend.africa", // make sure this is verified in SendGrid
+      subject: "Contact Us",
+      text: message,
+    };
+    const [response] = await sgMail.send(msg);
+    console.log("SendGrid response status code:", response.statusCode);
+    return { success: true, message: "Email Sent" };
+  } catch (e) {
+    console.error("Error sending email", e.response?.body || e.message);
+    throw new Error("Error sending email");
   }
 };
 
