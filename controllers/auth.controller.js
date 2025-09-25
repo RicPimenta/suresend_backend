@@ -136,6 +136,66 @@ exports.sendOtpEmail = async (req, res) => {
   }
 };
 
+exports.forgotPassword = async (req, res) => {
+  try {
+    let email = req.body.email;
+    const otpResponse = await OTPEMailService.sendOtp(email);
+    res.status(200).json({
+      success: true,
+      data: otpResponse.message,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    let { email, otp, password } = req.body;
+    console.log("Request:", { email, otp, password });
+
+    // 1. Verify OTP
+    const otpResponse = await OTPEMailService.verifyOtp(email, otp);
+    if (!otpResponse.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    // 2. Find user
+    const user = await authModel.findOneEmail(email);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // 3. Encrypt password
+    const encryptionPassword = await bcrypt.hash(password, 10);
+    console.log("Encrypted Password:", encryptionPassword);
+
+    // 4. Update password
+    await authModel.updatePassword(user.person_id, encryptionPassword);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
+  } catch (error) {
+    console.error("resetPassword Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+}; 
+
 exports.sendOtpMobile = async (req, res) => {
   try {
     let cell = req.body.cell;

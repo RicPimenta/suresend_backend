@@ -12,6 +12,16 @@ const checkExisitingUserMobile = async (cell) => {
   return res.rows.length > 0 ? res.rows[0] : null;
 };
 
+const updatePassword = async (id, password) => {
+  console.log("Updating password for user:", id);
+  const res = await pool.query(
+    'UPDATE Person SET "password" = $1 WHERE person_id = $2 RETURNING *',
+    [password, id]
+  );
+  console.log("Update result:", res.rowCount, res.rows);
+  return res.rows[0];
+};
+
 const findOneEmail = async (email) => {
   const res = await pool.query("SELECT * FROM Person WHERE email = $1", [
     email,
@@ -53,5 +63,6 @@ module.exports = {
   checkExisitingUser,
   findOneEmail,
   createUser,
-  checkExisitingUserMobile
+  checkExisitingUserMobile,
+  updatePassword,
 };
