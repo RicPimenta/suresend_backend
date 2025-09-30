@@ -19,4 +19,6 @@ router.post("/forgotPassword", Auth.forgotPassword);
 router.post("/verifyForgotPassword", Auth.verifyForgotPassword);
 router.post("/resetPassword", Auth.resetPassword);
 
+router.put("/updateFCMToken/:person_id", Auth.updateFcmToken);
+
 module.exports = router;

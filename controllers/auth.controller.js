@@ -299,6 +299,7 @@ exports.loginPhoneVerify = async (req, res) => {
         data: "Invalid OTP",
       });
     }
+    
 
     // 2. Fetch the user (so you can issue JWT with userId/email just like normal login)
     const user = await authModel.checkExisitingUser(PhoneNumber);
@@ -397,3 +398,41 @@ exports.verifyOtp = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+
+exports.updateFcmToken = async (req, res) => {
+  try {
+    const { person_id } = req.params;
+    const { fcm_token } = req.body;
+
+    if (!fcm_token) {
+      return res.status(400).json({
+        status: false,
+        message: "FCM token is required",
+      });
+    }
+
+    const updatedPerson = await authModel.updateFcmToken(person_id, fcm_token);
+
+    if (!updatedPerson) {
+      return res.status(404).json({
+        status: false,
+        message: "Person not found",
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "FCM token updated successfully",
+      data: updatedPerson,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal server error",
+      error: error.message,
+    });
+  }
+};
+

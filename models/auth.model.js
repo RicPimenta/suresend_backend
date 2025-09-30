@@ -22,6 +22,22 @@ const updatePassword = async (id, password) => {
   return res.rows[0];
 };
 
+const updateFcmToken = async (personId, fcmToken) => {
+  try {
+    const query = `
+        UPDATE Person
+        SET fcm_token = $1
+        WHERE person_id = $2
+        RETURNING person_id, email, fcm_token;
+      `;
+    const values = [fcmToken, personId];
+    const { rows } = await pool.query(query, values);
+    return rows[0];
+  } catch (error) {
+    throw error;
+  }
+};
+
 const findOneEmail = async (email) => {
   const res = await pool.query("SELECT * FROM Person WHERE email = $1", [
     email,
@@ -65,4 +81,5 @@ module.exports = {
   createUser,
   checkExisitingUserMobile,
   updatePassword,
+  updateFcmToken
 };
