@@ -16,7 +16,7 @@ router.post("/sendOtpMobile", Auth.sendOtpMobile);
 router.post("/loginOtpVerifyMobile", Auth.loginPhoneVerify);
 
 router.post("/forgotPassword", Auth.forgotPassword);
-router.post("/verifyForgotPassword", Auth.resetPassword);
+router.post("/verifyForgotPassword", Auth.verifyForgotPassword);
 router.post("/resetPassword", Auth.resetPassword);
 
 module.exports = router;
