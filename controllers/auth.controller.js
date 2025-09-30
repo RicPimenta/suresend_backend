@@ -153,10 +153,10 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-exports.resetPassword = async (req, res) => {
+exports.verifyForgotPassword = async (req, res) => {
   try {
-    let { email, otp, password } = req.body;
-    console.log("Request:", { email, otp, password });
+    let { email, otp } = req.body;
+    console.log("Request:", { email, otp });
 
     // 1. Verify OTP
     const otpResponse = await OTPEMailService.verifyOtp(email, otp);
@@ -166,6 +166,33 @@ exports.resetPassword = async (req, res) => {
         message: "Invalid OTP",
       });
     }
+    // 2. successful response
+    return res.status(200).json({
+      success: true,
+      message: "OTP verified successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    let { email, password } = req.body;
+    console.log("Request:", { email, password });
+
+    // // 1. Verify OTP
+    // const otpResponse = await OTPEMailService.verifyOtp(email, otp);
+    // if (!otpResponse.success) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Invalid OTP",
+    //   });
+    // }
 
     // 2. Find user
     const user = await authModel.findOneEmail(email);
@@ -194,7 +221,7 @@ exports.resetPassword = async (req, res) => {
       message: error.message,
     });
   }
-}; 
+};
 
 exports.sendOtpMobile = async (req, res) => {
   try {
