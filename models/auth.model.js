@@ -75,11 +75,76 @@ const createUser = async ({
   return res.rows[0];
 };
 
+const getAllUsers = async () => {
+  const res = await pool.query(
+    "SELECT person_id, first_name, middle_name, last_name, dob, country_of_residence, email, cell, address FROM Person ORDER BY person_id ASC"
+  );
+  return res.rows;
+};
+
+// Create a delete reasson
+const createDeleteReason = async (userId, reason) => {
+  const result = await pool.query(
+    "INSERT INTO DeleteReason (person_id, reason) VALUES ($1, $2) RETURNING id",
+    [userId, reason]
+  );
+  return result.rows[0];
+};
+
+const getUserById = async (userId) => {
+  const result = await pool.query("SELECT * FROM Person WHERE person_id = $1", [userId]);
+  return result.rows[0] || null;
+};
+
+// Verify delete request by id and user
+const verifyDeleteRequest = async (deleteRequestId, userId) => {
+  const result = await pool.query(
+    "UPDATE DeleteReason SET status = 'verified', verified_at = NOW() WHERE id = $1 AND person_id = $2 RETURNING *",
+    [deleteRequestId, userId]
+  );
+  return result.rows[0] || null; 
+};
+
+// Get verified delete request by id and user
+const getVerifiedDeleteRequest = async (deleteRequestId, userId) => {
+  const result = await pool.query(
+    "SELECT * FROM DeleteReason WHERE id=$1 AND person_id=$2 AND status='verified'",
+    [deleteRequestId, userId]
+  );
+  return result.rows[0] || null;
+};
+
+// Mark delete request as completed
+const completeDeleteRequest = async (deleteRequestId) => {
+  const result = await pool.query(
+    "UPDATE DeleteReason SET status='completed', completed_at=NOW() WHERE id=$1 RETURNING *",
+    [deleteRequestId]
+  );
+  return result.rows[0] || null;
+};
+
+// Mark user as deleted
+const deleteUser = async (userId) => {
+  const result = await pool.query(
+    "UPDATE Person SET is_deleted=true, deleted_at=NOW() WHERE person_id=$1 RETURNING *",
+    [userId]
+  );
+  return result.rows[0] || null;
+};
+
+
 module.exports = {
   checkExisitingUser,
   findOneEmail,
   createUser,
   checkExisitingUserMobile,
   updatePassword,
-  updateFcmToken
+  updateFcmToken,
+  getAllUsers,
+  createDeleteReason,
+  getUserById,
+  verifyDeleteRequest,
+  getVerifiedDeleteRequest,
+  completeDeleteRequest,
+  deleteUser
 };

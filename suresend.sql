@@ -33,3 +33,22 @@ CREATE TABLE referral_uses (
     FOREIGN KEY (referred_id) REFERENCES Person(person_id),
     UNIQUE (referred_id) -- a person can only redeem once
 );
+
+CREATE TABLE DeleteReason (
+    id SERIAL PRIMARY KEY,
+
+    person_id INT NOT NULL,
+    reason TEXT NOT NULL,
+
+    status VARCHAR(20) DEFAULT 'pending',  -- Values: pending / verified / completed
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verified_at TIMESTAMP,
+    completed_at TIMESTAMP,
+
+    -- Foreign Key Constraints
+    CONSTRAINT fk_delete_reason_person FOREIGN KEY (person_id) REFERENCES Person(iid) ON DELETE CASCADE
+);
+
+-- Optional: Add an index on person_id for faster lookups
+CREATE INDEX idx_delete_reason_person_id ON DeleteReason(person_id);
