@@ -28,5 +28,7 @@ router.get("/users", Auth.getAllUsers);
 router.post("/delete-account/reason", verifyToken, Auth.createDeleteReason);
 router.post("/delete-account/verify", verifyToken, Auth.verifyDeleteRequest);
 router.post("/delete-account/confirm", verifyToken, Auth.confirmDeleteAccount);
+router.post("/exsiting-user", Auth.checkExisitingUser);
+router.get("/getUserCount", Auth.getCountUsers);
 
 module.exports = router;
