@@ -1,7 +1,7 @@
 const pool = require("../config/db"); // pg Pool
 
 const checkExisitingUser = async (email) => {
-  const res = await pool.query("SELECT * FROM Person WHERE email = $1", [
+  const res = await pool.query("SELECT * FROM Person WHERE email = $1 AND is_deleted = false", [
     email,
   ]);
   return res.rows.length > 0 ? res.rows[0] : null;
@@ -39,14 +39,14 @@ const updateFcmToken = async (personId, fcmToken) => {
 };
 
 const findOneEmail = async (email) => {
-  const res = await pool.query("SELECT * FROM Person WHERE email = $1", [
+  const res = await pool.query("SELECT * FROM Person WHERE email = $1 AND is_deleted = false", [
     email,
   ]);
   return res.rows[0] || null;
 };
 
 const findOneCell = async (cell) => {
-  const res = await pool.query("SELECT * FROM Person WHERE cell = $1", [cell]);
+  const res = await pool.query("SELECT * FROM Person WHERE cell = $1 AND is_deleted = false", [cell]);
   return res.rows[0] || null;
 };
 
