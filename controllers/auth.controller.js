@@ -536,3 +536,53 @@ exports.confirmDeleteAccount = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+exports.checkExisitingUser = async (req, res) => {
+  const { email, cell } = req.body;
+
+  if (!email && !cell) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email or cell is required" });
+  }
+
+  try {
+    let user = null;
+
+    if (email) {
+      user = await authModel.findOneEmail(email);
+    }
+
+    if (!user && cell) {
+      user = await authModel.findOneCell(cell);
+    }
+
+    if (user) {
+      const { password,secret_pin, ...safeUser } = user; 
+      return res.status(200).json({
+        success: true,
+        message: "User exists",
+        data: safeUser,
+      });
+    }
+    else {
+          return res
+            .status(404)
+            .json({ success: false, message: "User not found" });
+        }
+  } catch (err) {
+    console.error("Error in checkExisitingUser:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.getCountUsers = async (req, res) => {
+  try {
+    const userCount = await authModel.getCountUsers();
+    return res.json({ success: true, message: "User count retrieved successfully", data: userCount });
+  } catch (err) {
+    console.error("Error in countUsers:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+

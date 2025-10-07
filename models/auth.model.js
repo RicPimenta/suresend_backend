@@ -45,6 +45,11 @@ const findOneEmail = async (email) => {
   return res.rows[0] || null;
 };
 
+const findOneCell = async (cell) => {
+  const res = await pool.query("SELECT * FROM Person WHERE cell = $1", [cell]);
+  return res.rows[0] || null;
+};
+
 const createUser = async ({
   first_name,
   middle_name,
@@ -132,6 +137,10 @@ const deleteUser = async (userId) => {
   return result.rows[0] || null;
 };
 
+const getCountUsers = async () => {
+  const res = await pool.query("SELECT COUNT(*) FROM Person");
+  return parseInt(res.rows[0].count, 10);
+}
 
 module.exports = {
   checkExisitingUser,
@@ -146,5 +155,7 @@ module.exports = {
   verifyDeleteRequest,
   getVerifiedDeleteRequest,
   completeDeleteRequest,
-  deleteUser
+  deleteUser,
+  findOneCell,
+  getCountUsers
 };
