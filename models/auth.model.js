@@ -1,7 +1,7 @@
 const pool = require("../config/db"); // pg Pool
 
 const checkExisitingUser = async (email) => {
-  const res = await pool.query("SELECT * FROM Person WHERE email = $1", [
+  const res = await pool.query("SELECT * FROM Person WHERE email = $1 AND is_deleted = false", [
     email,
   ]);
   return res.rows.length > 0 ? res.rows[0] : null;
@@ -39,14 +39,14 @@ const updateFcmToken = async (personId, fcmToken) => {
 };
 
 const findOneEmail = async (email) => {
-  const res = await pool.query("SELECT * FROM Person WHERE email = $1", [
+  const res = await pool.query("SELECT * FROM Person WHERE email = $1 AND is_deleted = false", [
     email,
   ]);
   return res.rows[0] || null;
 };
 
 const findOneCell = async (cell) => {
-  const res = await pool.query("SELECT * FROM Person WHERE cell = $1", [cell]);
+  const res = await pool.query("SELECT * FROM Person WHERE cell = $1 AND is_deleted = false", [cell]);
   return res.rows[0] || null;
 };
 
@@ -61,9 +61,11 @@ const createUser = async ({
   email,
   cell,
   address,
+  google_id,
+  apple_id,
 }) => {
   const res = await pool.query(
-    "INSERT INTO Person (first_name, middle_name, last_name, dob, country_of_residence, secret_pin, password, email, cell, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+    "INSERT INTO Person (first_name, middle_name, last_name, dob, country_of_residence, secret_pin, password, email, cell, address, google_id, apple_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
     [
       first_name,
       middle_name,
@@ -75,6 +77,8 @@ const createUser = async ({
       email,
       cell,
       address,
+      google_id,
+      apple_id,
     ]
   );
   return res.rows[0];

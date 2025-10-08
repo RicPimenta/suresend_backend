@@ -31,4 +31,7 @@ router.post("/delete-account/confirm", verifyToken, Auth.confirmDeleteAccount);
 router.post("/exsiting-user", Auth.checkExisitingUser);
 router.get("/getUserCount", Auth.getCountUsers);
 
+router.post("/google-signin", Auth.googleSignin);
+router.post("/apple-signin", Auth.appleSignin);
+
 module.exports = router;
