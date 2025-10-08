@@ -61,9 +61,11 @@ const createUser = async ({
   email,
   cell,
   address,
+  google_id,
+  apple_id,
 }) => {
   const res = await pool.query(
-    "INSERT INTO Person (first_name, middle_name, last_name, dob, country_of_residence, secret_pin, password, email, cell, address) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+    "INSERT INTO Person (first_name, middle_name, last_name, dob, country_of_residence, secret_pin, password, email, cell, address, google_id, apple_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *",
     [
       first_name,
       middle_name,
@@ -75,6 +77,8 @@ const createUser = async ({
       email,
       cell,
       address,
+      google_id,
+      apple_id,
     ]
   );
   return res.rows[0];
