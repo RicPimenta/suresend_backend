@@ -3,20 +3,24 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
   },
   "author": "techemupb",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "@sendgrid/mail": "^8.1.5",
+    "apple-signin-auth": "^2.0.0",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "google-auth-library": "^10.4.0",
     "jsonwebtoken": "^9.0.2",
     "logger_middleware_v2": "^1.0.0",
     "mongoose": "^8.18.1",
+    "nodemon": "^3.1.10",
     "pg": "^8.16.3",
     "twilio": "^5.9.0"
   }

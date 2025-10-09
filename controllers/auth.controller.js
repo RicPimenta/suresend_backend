@@ -3,6 +3,9 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const OTPEMailService = require("../services/sendGrid.service");
 const OTPMobileService = require("../services/otp.service");
+const { verifyOtp } = require("../services/otp.service");
+const { OAuth2Client } = require("google-auth-library");
+const appleSignin = require("apple-signin-auth");
 
 exports.createUser = async (req, res) => {
   try {
@@ -55,10 +58,16 @@ exports.createUser = async (req, res) => {
 
     const user = await authModel.findOneEmail(email);
 
+    // let token = await jwt.sign(
+    //   { id: user.id, email: user.email },
+    //   process.env.JWT_SECRET_KEY
+    // );
+
     let token = await jwt.sign(
-      { id: user.id, email: user.email },
+      { userId: user.person_id, email: user.email },
       process.env.JWT_SECRET_KEY
     );
+
     console.log(token);
 
     let objWithToken = { user, token };
@@ -98,10 +107,16 @@ exports.loginUser = async (req, res) => {
       });
     }
 
+    // let token = await jwt.sign(
+    //   { id: user.id, email: user.email },
+    //   process.env.JWT_SECRET_KEY
+    // );
+
     let token = await jwt.sign(
-      { id: user.id, email: user.email },
+      { userId: user.person_id, email: user.email },
       process.env.JWT_SECRET_KEY
     );
+
     res.status(200).json({
       success: true,
       data: user,
@@ -299,7 +314,6 @@ exports.loginPhoneVerify = async (req, res) => {
         data: "Invalid OTP",
       });
     }
-    
 
     // 2. Fetch the user (so you can issue JWT with userId/email just like normal login)
     const user = await authModel.checkExisitingUser(PhoneNumber);
@@ -399,7 +413,6 @@ exports.verifyOtp = async (req, res) => {
   }
 };
 
-
 exports.updateFcmToken = async (req, res) => {
   try {
     const { person_id } = req.params;
@@ -436,3 +449,268 @@ exports.updateFcmToken = async (req, res) => {
   }
 };
 
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await authModel.getAllUsers();
+
+    res.status(200).json({
+      success: true,
+      message: "Users details received successfully",
+      data: users,
+    });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+exports.createDeleteReason = async (req, res) => {
+  const { userId } = req.user;
+  const { reason } = req.body;
+
+  if (!reason)
+    return res.status(400).json({ success: false, message: "Reason required" });
+
+  try {
+    const deleteReason = await authModel.createDeleteReason(userId, reason);
+    return res.json({ success: true, deleteRequestId: deleteReason.id });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.verifyDeleteRequest = async (req, res) => {
+  const { userId } = req.user;
+  const { deleteRequestId, password, pin, otp, phone } = req.body;
+
+  if (!deleteRequestId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "deleteRequestId required" });
+  }
+
+  try {
+    const user = await authModel.getUserById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    let isVerified = false;
+
+    if (password) {
+      const valid = await bcrypt.compare(password, user.password);
+      if (valid) isVerified = true;
+    } else if (pin && pin === user.secret_pin) {
+      isVerified = true;
+    } else if (otp && phone) {
+      const otpResult = await verifyOtp(phone, otp);
+      if (otpResult.success) isVerified = true;
+    }
+
+    if (!isVerified) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Verification failed" });
+    }
+
+    await authModel.verifyDeleteRequest(deleteRequestId, userId);
+
+    return res.json({ success: true, message: "Verification successful" });
+  } catch (err) {
+    console.error("Error in verifyDeleteRequest:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.confirmDeleteAccount = async (req, res) => {
+  const { userId } = req.user;
+  const { deleteRequestId } = req.body;
+
+  if (!deleteRequestId)
+    return res
+      .status(400)
+      .json({ success: false, message: "deleteRequestId required" });
+
+  try {
+    const verifiedRequest = await authModel.getVerifiedDeleteRequest(
+      deleteRequestId,
+      userId
+    );
+    if (!verifiedRequest)
+      return res
+        .status(400)
+        .json({ success: false, message: "Not verified yet" });
+
+    await authModel.deleteUser(userId);
+    await authModel.completeDeleteRequest(deleteRequestId);
+
+    return res.json({ success: true, message: "Account deleted successfully" });
+  } catch (err) {
+    console.error("Error in confirmDeleteAccount:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.checkExisitingUser = async (req, res) => {
+  const { email, cell } = req.body;
+
+  if (!email && !cell) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email or cell is required" });
+  }
+
+  try {
+    let user = null;
+
+    if (email) {
+      user = await authModel.findOneEmail(email);
+    }
+
+    if (!user && cell) {
+      user = await authModel.findOneCell(cell);
+    }
+
+    if (user) {
+      const { password, secret_pin, ...safeUser } = user;
+      return res.status(200).json({
+        success: true,
+        message: "User exists",
+        data: safeUser,
+      });
+    } else {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+  } catch (err) {
+    console.error("Error in checkExisitingUser:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.getCountUsers = async (req, res) => {
+  try {
+    const userCount = await authModel.getCountUsers();
+    return res.json({
+      success: true,
+      message: "User count retrieved successfully",
+      data: userCount,
+    });
+  } catch (err) {
+    console.error("Error in countUsers:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+exports.googleSignin = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    // check if email
+    let user = await authModel.findOneEmail(email);
+    let isNewUser = false;
+
+    if (!user) {
+      let data = {
+        first_name: name,
+        email: email,
+        google_id: googleId,
+        //profile_picture: picture,
+      };
+      user = await authModel.createUser(data);
+      isNewUser = true;
+
+      // Send welcome email only once
+      //await sendWelcomeEmail(user.email, user.first_name);
+    }
+
+    let token = await jwt.sign(
+      { userId: user.person_id, email: user.email },
+      process.env.JWT_SECRET_KEY
+    );
+    console.log(token);
+
+    let objWithToken = { user, token, isNewUser };
+    res.status(200).json({
+      success: true,
+      data: objWithToken,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+exports.appleSignin = async (req, res) => {
+  try {
+    const { identityToken } = req.body;
+
+    const appleUser = await appleSignin.verifyIdToken(identityToken, {
+      audience: process.env.APPLE_CLIENT_ID,
+      ignoreExpiration: true,
+    });
+
+    console.log(appleUser);
+    //const { email, sub: appleId } = appleUser;
+
+    const appleId = appleUser.sub;
+    const email = appleUser.email || `${appleId}@apple-anonymous.com`; // fallback if email hidden by user
+
+    // check if user exists
+    // Apple only gives the user's name on first login and only on the frontend, not in identityToken.
+    let user = await authModel.findOneEmail(email);
+    let isNewUser = false;
+
+    const name = email.match(/^([^@']+)/);
+    console.log(name[1]);
+    if (!user) {
+      let data = {
+        first_name: name[1], // Apple only gives name on first login
+        email: email,
+        //is_verify_email: true,
+        apple_id: appleId, // optional: add to schema if needed
+      };
+      user = await authModel.createUser(data);
+      isNewUser = true;
+
+      // Send welcome email
+      //await sendWelcomeEmail(user.email, user.first_name);
+    }
+
+    let token = await jwt.sign(
+      { userId: user.person_id, email: user.email },
+      process.env.JWT_SECRET_KEY
+    );
+
+    res.status(200).json({
+      success: true,
+      data: { user, token, isNewUser },
+    });
+  } catch (error) {
+    console.error("Apple login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server Error",
+      error: error.message,
+    });
+  }
+};
