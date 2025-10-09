@@ -16,7 +16,7 @@ exports.sendOtp = async (phone) => {
     const otp = generateOtp();
     const expiresAt = Date.now() + 5 * 60 * 1000;
     let otp_status = await client.messages.create({
-      body: `Your OTP is feeding Bird ${otp}`,
+      body: `Your OTP is Sure Send ${otp}`,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: phone,
     });
