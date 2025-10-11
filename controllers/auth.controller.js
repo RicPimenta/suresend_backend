@@ -391,7 +391,9 @@ exports.verifyOtp = async (req, res) => {
 
     // Detect type
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
-    const isPhone = /^[0-9]{7,15}$/.test(identifier);
+    // const isPhone = /^[0-9]{7,15}$/.test(identifier);
+    const isPhone = /^\+[1-9]\d{7,14}$/.test(identifier); 
+
 
     if (!isEmail && !isPhone) {
       return res

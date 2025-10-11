@@ -35,11 +35,19 @@ exports.sendOtp = async (phone) => {
 
 exports.verifyOtp = async (phone, otp) => {
   try {
+    // const latestUser = await OtpModel.findOne({
+    //   user_cell: phone,
+    //   status: true,
+    //   otpType: "Cell",
+    // });
+
     const latestUser = await OtpModel.findOne({
       user_cell: phone,
       status: true,
       otpType: "Cell",
-    });
+    })
+      .sort({ createdAt: -1 }) // latest OTP
+      .exec();
 
     if (!latestUser) {
       return { success: false, message: "No OTP found for this email" };
